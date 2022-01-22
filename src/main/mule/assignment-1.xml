@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d3dc3299-99e3-4eaf-b8bb-93c64dd4c279" >
+		<http:listener-connection host="0.0.0.0" port="8081" protocol="HTTPS">
+			<tls:context >
+				<tls:key-store type="jks" path="server-keystore.jks" keyPassword="mulesoft" password="mulesoft" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="80dd77f1-23d9-423d-b37b-2b5d9e9d74ac" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="123456" database="studentdetails" />
+	</db:config>
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="640e95c5-6461-4991-b5f3-4e53d9a37def" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="123456" database="studentdetails" />
+	</db:config>
+	<db:config name="Database_Config2" doc:name="Database Config" doc:id="3f3fd38b-1fbf-4167-81b0-988ea8c754b0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="123456" database="studentdetails" />
+	</db:config>
+	<flow name="assignment-1Flow" doc:id="a486eb4e-25c8-4541-9c88-51f5d127664a" >
+		<http:listener doc:name="Listener" doc:id="492fb7f8-60b7-47d8-8c4c-57c06fd3ae53" config-ref="HTTP_Listener_config" path="/details"/>
+		<file:read doc:id="8cf08a7a-f538-4fb3-97c2-73c27247528d" path="E:\Test1.1.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="a7ed1bb8-4890-482b-9ada-11fbbc4ae74f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="assignment-1Batch_Job" doc:id="603a5ea1-1786-431e-90fb-b8a71fa5571c" >
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="9538ea07-5333-4dd5-a8fb-d2cfea811f24" acceptExpression="#[(sizeOf(payload.Phone)==10)]">
+					<db:insert doc:id="518ca5a2-0be7-4efe-897f-bc098d24e875" config-ref="Database_Config">
+						<db:sql ><![CDATA[insert into personaldetails values(:firstname,:middlename,:lastname,:address1,:address2,:phone,:userid);]]></db:sql>
+						<db:input-parameters ><![CDATA[#[{
+	firstname:payload.FirstName,
+	userid: payload.UserID,
+	middlename:payload.MiddleName,
+	lastname:payload.LastName,
+	address1:payload.Address1,
+	address2:payload.Address2,
+	phone:payload.Phone
+}]]]></db:input-parameters>
+					</db:insert>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+	<flow name="assignment-1Flow1" doc:id="46712d76-ad2b-4506-b1a0-fc1ea25cbc4e" >
+		<http:listener doc:name="Listener" doc:id="16cc69c2-85bf-4c5f-b410-59baacbeafac" config-ref="HTTP_Listener_config" path="/detail"/>
+		<file:read doc:name="Read" doc:id="d70e25f8-167b-4f14-8770-7cf534d87a5c" path="E:\TEST2CSV.csv" />
+		<ee:transform doc:name="Transform Message" doc:id="a5034aeb-44b3-4c56-8328-d36c00ff9236" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="assignment-1Batch_Job1" doc:id="395644c6-5ca4-4e35-a4a0-b7627e38d213" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="6fdf38bb-36e5-42a1-8fda-c8e0fa93ac88" acceptExpression="#[payload.DeptID contains 'DEPTID']">
+					<db:insert doc:name="Insert" doc:id="9abb3d27-c391-444c-974b-0e65125ced8b" config-ref="Database_Config1">
+						<db:sql ><![CDATA[insert into departmentdetails values(:deptid,:designation,:dateofjoining,:salary,:previousemployer,:userid);]]></db:sql>
+						<db:input-parameters ><![CDATA[#[{
+	
+	designation: payload.Designation,
+	dateofjoining: payload.DateofJoining,
+	deptid:  payload.DeptID,
+	previousemployer: payload.PreviouEmployer,
+	salary: payload.Salary,
+	userid: payload.UserID
+	
+}]]]></db:input-parameters>
+					</db:insert>
+				</batch:step>
+			</batch:process-records>
+		</batch:job>
+	</flow>
+	<flow name="assignment-1Flow2" doc:id="54521b3a-12ee-435f-a10a-772429067df2" >
+		<set-variable value='#[{&#10;	("userId1" : attributes.queryParams.userId1) if(attributes.queryParams.userId1 != null),&#10;	("userId2" : attributes.queryParams.userId2) if(attributes.queryParams.userId2 != null),&#10;	("userId3" : attributes.queryParams.userId3) if(attributes.queryParams.userId3 != null)&#10;}]' doc:name="Set Variable" doc:id="7fc67859-372e-48e8-9517-75655328bbce" variableName="a"/>
+		<db:select doc:name="Select" doc:id="ef78fbe8-97ea-4176-aeb1-42635bbd56c8" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from details where USERID in (:userid1,:userid2,:userid3)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	userid1: attributes.queryParams.userId1,
+	userid2: attributes.queryParams.userId2,
+	userid3: attributes.queryParams.userId3
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="53a775d6-d9d6-4e1d-822f-a53584587361" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="70b4a9b2-2364-4760-a2ad-8d1c5ed64125" >
+			<error-mapping targetType="WRONG:USERID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="2262d1cd-419d-4cce-894a-54274645109c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+	message : "select userid," ++ $.COLUMNNAMES ++ " FROM " ++ $.TABLENAMES ++ " WHERE USERID = '" ++ $.USERID ++ "'"
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="324a2c4b-dae8-407e-a63c-8be7fe4a90a9" >
+			<db:select doc:name="Select" doc:id="3c2516d2-eaae-4cd5-a85b-4029946c70fe" config-ref="Database_Config">
+				<db:sql ><![CDATA[#[payload.message]]]></db:sql>
+			</db:select>
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Message" doc:id="154825bb-9fe9-4e28-ae15-22b390cfb638" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="e3cbaf0c-0300-4495-978d-42751c6ef95f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(((flatten(payload)) groupBy $.userid
+mapObject(value,key,index) ->{
+    (key):value reduce($$ ++ $)
+})orderBy $.userid) groupBy $.DEPTID
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c5df72c1-66a5-4ee1-a054-5c8b10609d43" type="DB:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="08af8d3c-7364-489f-86fe-26990377112c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json 
+---
+{
+	 "error": "error in DB",
+
+   "message": "Incorrect username and password",
+
+   "detail": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="747c9871-921f-42b5-b251-b488f38b3ced" type="WRONG:USERID">
+				<ee:transform doc:name="Transform Message" doc:id="5b3c7dfa-c885-44b4-8dde-3b4df7becb68" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error": "wrong userID",
+
+   "message": ["No records available Hence cannot proceed with the execution"] + vars.a,
+
+   "detail": "Please give userId1=UID1303,userId2=UID1205,userId3=UID1766"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
